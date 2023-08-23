@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """ State Module for HBNB project """
 from models.base_model import BaseModel, Base, Column, Integer, String,\
-        relationship, storage
+        relationship
 
 
 class State(BaseModel, Base):
@@ -14,6 +14,13 @@ class State(BaseModel, Base):
 
     @property
     def cities(self):
+        """propery decorator for cities attribute"""
+        from models import getenv
+
+        if getenv("HBNB_TYPE_STORAGE") == 'db':
+            return self.cities
+
+        from models import storage
         from models.city import City
 
         city_inst = storage.all(City)

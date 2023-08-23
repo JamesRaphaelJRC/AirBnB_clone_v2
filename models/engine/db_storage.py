@@ -37,17 +37,17 @@ class DBStorage:
         '''
         objects = []
         if cls is None:
-            objects.extend(self.__session.query(User).all())
             objects.extend(self.__session.query(State).all())
             objects.extend(self.__session.query(City).all())
             objects.extend(self.__session.query(Amenity).all())
             objects.extend(self.__session.query(Place).all())
             objects.extend(self.__session.query(Review).all())
+            objects.extend(self.__session.query(User).all())
         else:
             if type(cls) is str:
-                objCls = eval(cls)
+                cls = eval(cls)
 
-            objects = self.__session.query(objCls).all()
+            objects = self.__session.query(cls).all()
 
         return {"{}.{}".format(type(obj).__name__, obj.id): obj for obj in
                 objects}
@@ -62,7 +62,7 @@ class DBStorage:
 
     def delete(self, obj=None):
         ''' Deletes from the current database session obj if not None.'''
-        if obj not None:
+        if obj is not None:
             self.__session.delete(obj)
 
     def reload(self):
