@@ -1,12 +1,7 @@
 #!/usr/bin/python3
 """ Place Module for HBNB project """
-from models.base_model import BaseModel, Base
-from sqlalchemy import Column, String, Integer, Float, ForeignKey
-from sqlalchemy.orm import relationship
-import models
-from os import getenv
-from models.amenity import Amenity
-from models.review import Review
+from models.base_model import BaseModel, Base, Column, String, Integer, Float,\
+        ForeignKey, relationship
 
 
 class Place(BaseModel, Base):
@@ -26,7 +21,24 @@ class Place(BaseModel, Base):
     latitude = Column(Float)
     longitude = Column(Float)
     amenity_ids = []
+    user = relationship("User", back_populates="places")
+    cities = relationship("City", back_populates="places")
     reviews = relationship("Review", backref="place", cascade="delete")
-    amenities = relationship("Amenity", secondary="place_amenity",
-                             viewonly=False)
 
+    @property
+    def reviews(self):
+        """propery decorator for reviews attribute"""
+        from models import getenv
+
+        if getenv("HBNB_TYPE_STORAGE") == 'db':
+            return self.reviews
+
+        from models import storage
+        from models.review import Review
+
+        review_inst = storage.all(Review)
+        match_reviews = []
+        for key, obj in review_inst.items():
+            if self.id == obj.place_id:
+                match_reviews.append(obj)
+        return match_reviews
