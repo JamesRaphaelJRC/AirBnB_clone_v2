@@ -3,7 +3,8 @@
 import uuid
 from datetime import datetime
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Float,\
+        Table
 from sqlalchemy.orm import relationship
 
 
@@ -19,14 +20,18 @@ class BaseModel:
 
     def __init__(self, *args, **kwargs):
         """Instatntiates a new model"""
-        if not kwargs:
-            self.id = str(uuid.uuid4())
-            self.created_at = datetime.utcnow()
-            self.updated_at = datetime.utcnow()
-        else:
-            kwargs['updated_at'] = datetime.fromisoformat(kwargs['updated_at'])
-            kwargs['created_at'] = datetime.fromisoformat(kwargs['created_at'])
-            del kwargs['__class__']
+        self.id = str(uuid.uuid4())
+        self.created_at = datetime.utcnow()
+        self.updated_at = datetime.utcnow()
+        if kwargs:
+            try:
+                kwargs['updated_at'] = datetime.fromisoformat(
+                        kwargs['updated_at'])
+                kwargs['created_at'] = datetime.fromisoformat(
+                        kwargs['created_at'])
+                del kwargs['__class__']
+            except Exception:
+                pass
             self.__dict__.update(kwargs)
 
     def __str__(self):

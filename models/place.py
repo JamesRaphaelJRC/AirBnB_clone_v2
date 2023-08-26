@@ -1,7 +1,12 @@
 #!/usr/bin/python3
 """ Place Module for HBNB project """
 from models.base_model import BaseModel, Base, Column, String, Integer, Float,\
-        ForeignKey, relationship
+        ForeignKey, relationship, Table
+from os import getenv
+
+place_amenity_table = Table("place_amenity", Base.metadata, Column(
+    'place_id', ForeignKey('places.id'), primary_key=True),
+            Column('amenity_id', ForeignKey('amenities.id'), primary_key=True))
 
 
 class Place(BaseModel, Base):
@@ -20,25 +25,40 @@ class Place(BaseModel, Base):
     price_by_night = Column(Integer, default=0)
     latitude = Column(Float)
     longitude = Column(Float)
-    amenity_ids = []
     user = relationship("User", back_populates="places")
     cities = relationship("City", back_populates="places")
     reviews = relationship("Review", backref="place", cascade="delete")
+    amenities = relationship("Amenity", secondary="place_amenity",
+                             viewonly=False, back_populates='place_amenities')
 
-    @property
-    def reviews(self):
-        """propery decorator for reviews attribute"""
-        from models import getenv
+    if getenv("HBNB_TYPE_STORAGE") != 'db':
+        @property
+        def reviews(self):
+            """propery decorator for reviews attribute"""
+            from models import storage
+            from models.review import Review
 
-        if getenv("HBNB_TYPE_STORAGE") == 'db':
-            return self.reviews
+            review_inst = storage.all(Review)
+            match_reviews = []
+            for key, obj in review_inst.items():
+                if self.id == obj.place_id:
+                    match_reviews.append(obj)
+            return match_reviews
 
-        from models import storage
-        from models.review import Review
+        @property
+        def amenities(self):
+            """property decorator for amenities attribute"""
 
-        review_inst = storage.all(Review)
-        match_reviews = []
-        for key, obj in review_inst.items():
-            if self.id == obj.place_id:
-                match_reviews.append(obj)
-        return match_reviews
+            if self.amenity_ids:
+                return self.amenity_ids
+            else:
+                return []
+
+        @amenities.setter
+        def amenities(self, obj):
+            from models.amenity import Amenity
+
+            if type(obj) == Amenity:
+                if not self.amenity_ids:
+                    self.amenity_ids = []
+                self.amenity_ids.append(obj.id)
