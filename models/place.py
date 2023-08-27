@@ -25,13 +25,27 @@ class Place(BaseModel, Base):
     price_by_night = Column(Integer, default=0)
     latitude = Column(Float)
     longitude = Column(Float)
+    amenities = relationship("Amenity", secondary="place_amenity",
+                             viewonly=False, backref="place_amenities")
     user = relationship("User", back_populates="places")
     cities = relationship("City", back_populates="places")
     reviews = relationship("Review", backref="place", cascade="delete")
-    amenities = relationship("Amenity", secondary="place_amenity",
-                             viewonly=False, back_populates='place_amenities')
+    amenity_ids = []
 
     if getenv("HBNB_TYPE_STORAGE") != 'db':
+        @property
+        def amenities(self):
+            """property decorator for amenities attribute"""
+
+            return self.amenity_ids
+
+        @amenities.setter
+        def amenities(self, obj):
+            from models.amenity import Amenity
+
+            if type(obj) == Amenity:
+                self.amenity_ids.append(obj.id)
+
         @property
         def reviews(self):
             """propery decorator for reviews attribute"""
@@ -44,21 +58,3 @@ class Place(BaseModel, Base):
                 if self.id == obj.place_id:
                     match_reviews.append(obj)
             return match_reviews
-
-        @property
-        def amenities(self):
-            """property decorator for amenities attribute"""
-
-            if self.amenity_ids:
-                return self.amenity_ids
-            else:
-                return []
-
-        @amenities.setter
-        def amenities(self, obj):
-            from models.amenity import Amenity
-
-            if type(obj) == Amenity:
-                if not self.amenity_ids:
-                    self.amenity_ids = []
-                self.amenity_ids.append(obj.id)
