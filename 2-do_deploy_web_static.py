@@ -19,9 +19,11 @@ def do_deploy(archive_path):
         return False
 
     try:
-        put(archive_path, "/tmp/")
         arcFilnam = os.path.basename(archive_path).replace(".tgz", "")
         new_path = "/data/web_static/releases/{}".format(arcFilnam)
+
+        put(archive_path, "/tmp/")
+        run("rm -rf /data/web_static/releases/{}/".format(arcFilnam))
         run("mkdir -p {}".format(new_path))
         run("tar -xvzf /tmp/{}.tgz -C {} --strip-components=1".format(
                                                                     arcFilnam,
