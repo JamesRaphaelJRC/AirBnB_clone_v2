@@ -1,52 +1,61 @@
 # Sets up webserver for deployment
 
 package { 'nginx':
-	ensure	=> 'installed',
+	ensure	 => 'present',
+	provider => 'apt'
 }
 
 file { '/data/':
-	ensure	=> 'directory',
-	owner	=> 'ubuntu',
-	group	=> 'ubuntu',
+	ensure	=> 'directory'
 }
 
 file { '/data/web_static/':
-	ennsure	=> 'directory',
-	owner	=> 'ubuntu',
-	group	=> 'ubuntu',
+	ennsure	=> 'directory'
 }
 
 file { '/data/web_static/releases/':
-	ensure	=> 'directory',
-	owner	=> 'ubuntu',
-	group 	=> 'ubuntu',
+	ensure	=> 'directory'
 }
 
 file { '/data/web_static/shared/':
-	ensure	=> 'directory',
-	owner	=> 'ubuntu',
-	group	=> 'ubuntu',
+	ensure	=> 'directory'
 }
 
 file { '/data/web_static/releases/test/':
-	ensure	=> 'directory',
-	owner	=> 'ubuntu',
-	group	=> 'ubuntu',
+	ensure	=> 'directory'
 }
 
 file { '/data/web_static/releases/test/index.html':
 	ensure	=> 'file',
-	owner	=> 'ubuntu',
-	group	=> 'ubuntu',
-	content	=> '<html><body>Testing my puppet skills</body></html>',
+	content	=> '<html><body>Testing my puppet skills</body></html>'
 }
 
 file { '/data/web_static/current':
 	ensure	=> 'link',
 	target 	=> '/data/web_static/releases/test',
-	force	=> true,
-	owner	=> 'ubuntu',
-	group	=> 'ubuntu',
+	force	=> true
+}
+
+exec { 'chown -R ubuntu:ubuntu /data/':
+	path	=> '/usr/bin:/usr/local/bin/:/bin/'
+}
+
+file { '/var/www':
+	ensure	=> 'directory'
+}
+
+file { '/var/www/html':
+	ensure	=> 'directory'
+}
+
+file { '/var/www/html/index.html':
+	ensure	=> 'present',
+	content	=> "Hello world from /var/www/index.html***\n"
+}
+
+file { '/var/www/html/404.html':
+	ensure	=> 'present',
+	content	=> "Ceci n'est pas une page - Error page\n"
 }
 
 file { '/etc/nginx/sites-availabe/default':
@@ -76,11 +85,9 @@ server {
 }
 ",
 	require => Package['nginx'],
-	notify	=> Service['nginx'].
+	notify	=> Service['nginx']
 }
 
-service { 'nginx':
-	ensure	=> 'running',
-	enable	=> true,
-	require	=> File['/etc/nginx/sites-available/default']
+exec { 'nginx restart':
+	path => '/etc/init.d/'
 }
