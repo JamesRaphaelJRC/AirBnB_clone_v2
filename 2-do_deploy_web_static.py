@@ -1,55 +1,35 @@
 #!/usr/bin/python3
-"""Compress web static package
-"""
-from fabric.api import *
-from datetime import datetime
-from os import path
+''' Deploys an archive file on my webservers
+
+    USAGE:
+    fab -f 2-do_deploy_web_static.py do_deploy:archive_path='the path'.tgz
+
+'''
+import os
+from fabric.api import run, put, env
 
 
-env.hosts = ['54.224.24.109', '54.160.116.141']
-env.user = 'ubuntu'
-env.key_filename = '~/.ssh/school'
+env.hosts = ['ubuntu@54.224.24.109', 'ubuntu@54.160.116.141']
 
 
 def do_deploy(archive_path):
-    """ Deploy web files to server """
-    try:
-        if not (path.exists(archive_path)):
-            return False
-
-        # upload archive
-        put(archive_path, '/tmp/')
-
-        # create target dir
-        timestamp = archive_path[-18:-4]
-        run('sudo mkdir -p /data/web_static/\
-releases/web_static_{}/'.format(timestamp))
-
-        # uncompress archive and delete .tgz
-        run('sudo tar -xzf /tmp/web_static_{}.tgz -C \
-/data/web_static/releases/web_static_{}/'
-            .format(timestamp, timestamp))
-
-        # remove archive
-        run('sudo rm /tmp/web_static_{}.tgz'.format(timestamp))
-
-        # move contents into host web_static
-        run('sudo mv /data/web_static/releases/web_static_{}/web_static/* \
-/data/web_static/releases/web_static_{}/'.format(timestamp, timestamp))
-
-        # remove extraneous web_static dir
-        run('sudo rm -rf /data/web_static/releases/\
-web_static_{}/web_static'
-            .format(timestamp))
-
-        # delete pre-existing sym link
-        run('sudo rm -rf /data/web_static/current')
-
-        # re-establish symbolic link
-        run('sudo ln -s /data/web_static/releases/\
-web_static_{}/ /data/web_static/current'.format(timestamp))
-    except Exception as e:
+    ''' Deploys an archive to 2 webservers '''
+    if not os.path.isfile(archive_path):
         return False
 
-    # return True on success
-    return True
+    try:
+        arch_file = archive_path.split("/")[-1]
+        filename = arch_file.split(".")[0]
+        path = "/data/web_static/releases/{}".format(filename)
+
+        put(archive_path, "/tmp/")
+        run("sudo mkdir -p {}".format(path))
+        run("sudo tar -xvzf /tmp/{}.tgz -C {}/ --strip-components=1".
+            format(filename, path))
+        run("sudo rm /tmp/{}.tgz".format(filename))
+        run("sudo rm -rf {}/web_static".format(path))
+        run("sudo rm -rf /data/web_static/current")
+        run("sudo ln -s {}/ /data/web_static/current".format(path))
+        return True
+    except Exception as e:
+        return False
