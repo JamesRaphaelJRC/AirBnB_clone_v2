@@ -42,13 +42,9 @@ def display_python(text=None):
     return "Python {}".format(text)
 
 
-@app.route("/number", strict_slashes=False)
-@app.route("/number/<n>", strict_slashes=False)
+@app.route("/number/<int:n>", strict_slashes=False)
 def is_number(n):
-    if int(n) or n == '0':
-        return "{} is a number".format(n)
-    else:
-        return
+    return "{} is a number".format(n)
 
 
 if __name__ == '__main__':
