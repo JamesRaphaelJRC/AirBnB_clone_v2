@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 
 @app.route('/state_list', strict_slashes=False)
-def hello_hbnb():
+def states_list():
     ''' Displays a HTML webpage with a list of all States object in the
         database
     '''
