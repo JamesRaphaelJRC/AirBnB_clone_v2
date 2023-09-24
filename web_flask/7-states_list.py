@@ -6,7 +6,7 @@ from models import storage
 app = Flask(__name__)
 
 
-@app.route('/state_list', strict_slashes=False)
+@app.route('/states_list', strict_slashes=False)
 def states_list():
     ''' Displays a HTML webpage with a list of all States object in the
         database
